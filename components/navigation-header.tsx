@@ -1,9 +1,18 @@
 "use client"
 
-import { Search, ArrowLeft, Home } from "lucide-react"
+import { Search, ArrowLeft, Home, LogOut, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useRestaurant } from "@/contexts/restaurant-context"
+import { useAuth } from "@/contexts/auth-context"
 
 interface NavigationHeaderProps {
   title: string
@@ -12,6 +21,7 @@ interface NavigationHeaderProps {
 
 export function NavigationHeader({ title, showBackButton = false }: NavigationHeaderProps) {
   const { state, dispatch } = useRestaurant()
+  const { state: authState, logout } = useAuth()
 
   const handleBackToDashboard = () => {
     dispatch({ type: "SET_VIEW", payload: "dashboard" })
@@ -22,6 +32,11 @@ export function NavigationHeader({ title, showBackButton = false }: NavigationHe
   }
 
   const handleGoHome = () => {
+    dispatch({ type: "SET_VIEW", payload: "home" })
+  }
+
+  const handleLogout = () => {
+    logout()
     dispatch({ type: "SET_VIEW", payload: "home" })
   }
 
@@ -79,12 +94,36 @@ export function NavigationHeader({ title, showBackButton = false }: NavigationHe
             />
           </div>
         </div>
-        <div
-          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-          style={{
-            backgroundImage: `url("/placeholder.svg?height=40&width=40")`,
-          }}
-        />
+
+        {/* User Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <User className="h-4 w-4 text-green-700" />
+              </div>
+              <div className="text-left hidden sm:block">
+                <div className="text-sm font-medium">
+                  {authState.user?.firstName} {authState.user?.lastName}
+                </div>
+                <div className="text-xs text-gray-500 capitalize">{authState.user?.role}</div>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
