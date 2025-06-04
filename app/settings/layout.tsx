@@ -1,7 +1,18 @@
 import type React from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { CreditCard, FileText, Home, Printer, Receipt, SettingsIcon, Store, Users, Utensils } from "lucide-react"
+import {
+  CreditCard,
+  FileText,
+  Home,
+  Printer,
+  Receipt,
+  SettingsIcon,
+  Store,
+  Users,
+  Utensils,
+  LayoutDashboard,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -23,13 +34,25 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
         <aside className="hidden w-[240px] border-r bg-muted/40 lg:block">
           <div className="flex h-full flex-col">
             <div className="border-b py-4 px-5">
-              <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+              <Link href="/" className="flex items-center gap-2 font-semibold">
                 <Store className="h-5 w-5" />
                 <span>Restaurant POS</span>
               </Link>
             </div>
             <ScrollArea className="flex-1 py-4">
               <nav className="grid gap-2 px-2">
+                <Link href="/dashboard" passHref>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "flex w-full items-center justify-start gap-2",
+                      "hover:bg-accent hover:text-accent-foreground",
+                    )}
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
                 <Link href="/settings" passHref>
                   <Button
                     variant="ghost"
