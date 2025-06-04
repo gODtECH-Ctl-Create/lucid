@@ -3,13 +3,14 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { RestaurantProvider } from "@/contexts/restaurant-context"
+import { InventoryProvider } from "@/contexts/inventory-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "LUCID CASH POINT",
   description: "Restaurant POS and Management System",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <RestaurantProvider>{children}</RestaurantProvider>
+        <RestaurantProvider>
+          <InventoryProvider>{children}</InventoryProvider>
+        </RestaurantProvider>
       </body>
     </html>
   )

@@ -8,28 +8,35 @@ import { Cart } from "../components/cart"
 import { Footer } from "../components/footer"
 import { NavigationHeader } from "../components/navigation-header"
 import DashboardPage from "./dashboard/page"
+import HomePage from "./home/page"
 
-export default function HomePage() {
+export default function RootPage() {
   const { state } = useRestaurant()
 
+  // Show home page by default, then dashboard or POS based on currentView
   if (state.currentView === "dashboard") {
     return <DashboardPage />
   }
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      <SidebarNav />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <NavigationHeader title="LUCID CASH POINT" showBackButton />
-        <div className="flex-1 flex overflow-hidden">
-          <main className="flex-1 overflow-auto p-4">
-            <CategoryFilter />
-            <FoodGrid />
-          </main>
-          <Cart />
+  if (state.currentView === "pos") {
+    return (
+      <div className="flex h-screen bg-gray-100">
+        <SidebarNav />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <NavigationHeader title="LUCID CASH POINT" showBackButton />
+          <div className="flex-1 flex overflow-hidden">
+            <main className="flex-1 overflow-auto p-4">
+              <CategoryFilter />
+              <FoodGrid />
+            </main>
+            <Cart />
+          </div>
+          <Footer />
         </div>
-        <Footer />
       </div>
-    </div>
-  )
+    )
+  }
+
+  // Default to home page
+  return <HomePage />
 }

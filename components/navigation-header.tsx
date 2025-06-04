@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, ArrowLeft } from "lucide-react"
+import { Search, ArrowLeft, Home } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useRestaurant } from "@/contexts/restaurant-context"
@@ -19,6 +19,10 @@ export function NavigationHeader({ title, showBackButton = false }: NavigationHe
 
   const handleGoToPOS = () => {
     dispatch({ type: "SET_VIEW", payload: "pos" })
+  }
+
+  const handleGoHome = () => {
+    dispatch({ type: "SET_VIEW", payload: "home" })
   }
 
   return (
@@ -46,16 +50,22 @@ export function NavigationHeader({ title, showBackButton = false }: NavigationHe
           </svg>
         </div>
         <h2 className="text-[#181811] text-lg font-bold leading-tight tracking-[-0.015em]">{title}</h2>
-        {state.currentView === "dashboard" && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGoToPOS}
-            className="ml-4 bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-          >
-            Go to POS
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={handleGoHome}>
+            <Home className="h-4 w-4 mr-1" />
+            Home
           </Button>
-        )}
+          {state.currentView === "dashboard" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGoToPOS}
+              className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+            >
+              Go to POS
+            </Button>
+          )}
+        </div>
       </div>
       <div className="flex flex-1 justify-end gap-8">
         <div className="flex flex-col min-w-40 !h-10 max-w-64">

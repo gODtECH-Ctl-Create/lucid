@@ -36,7 +36,7 @@ interface Customer {
 interface RestaurantState {
   orders: Order[]
   customers: Customer[]
-  currentView: "dashboard" | "pos"
+  currentView: "home" | "dashboard" | "pos"
   dailyMetrics: {
     totalSales: number
     numberOfOrders: number
@@ -48,7 +48,7 @@ type RestaurantAction =
   | { type: "ADD_ORDER"; payload: Order }
   | { type: "UPDATE_ORDER_STATUS"; payload: { orderId: string; status: Order["status"] } }
   | { type: "ADD_CUSTOMER"; payload: Customer }
-  | { type: "SET_VIEW"; payload: "dashboard" | "pos" }
+  | { type: "SET_VIEW"; payload: "home" | "dashboard" | "pos" }
   | { type: "UPDATE_METRICS" }
 
 const initialState: RestaurantState = {
@@ -136,7 +136,7 @@ const initialState: RestaurantState = {
       lastVisit: new Date(Date.now() - 3600000),
     },
   ],
-  currentView: "dashboard",
+  currentView: "home",
   dailyMetrics: {
     totalSales: 2450,
     numberOfOrders: 120,

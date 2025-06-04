@@ -6,9 +6,11 @@ import { NavigationHeader } from "@/components/navigation-header"
 import { ActionButton } from "@/components/action-button"
 import { MetricCard } from "@/components/metric-card"
 import { useRestaurant } from "@/contexts/restaurant-context"
+import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {
   const { state, dispatch } = useRestaurant()
+  const router = useRouter()
 
   const handleNewOrder = () => {
     dispatch({ type: "SET_VIEW", payload: "pos" })
@@ -25,8 +27,7 @@ export default function DashboardPage() {
   }
 
   const handleInventory = () => {
-    // Navigate to inventory view
-    console.log("Navigate to inventory")
+    router.push("/inventory")
   }
 
   const handleReports = () => {
