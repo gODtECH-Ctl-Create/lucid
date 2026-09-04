@@ -28,6 +28,7 @@ export interface OrderItem {
   name: string
   unitPrice: number
   quantity: number
+  imageUrl?: string
   notes?: string
   modifiers: OrderItemModifier[]
 }
@@ -106,7 +107,7 @@ export function canTransitionOrder(from: OrderStatus, to: OrderStatus): boolean 
   return transitions[from].includes(to)
 }
 
-export function transitionOrder(order: Order, nextStatus: OrderStatus): Order {
+export function transitionOrder(order: Order, nextStatus: OrderStatus, now = new Date()): Order {
   if (!canTransitionOrder(order.status, nextStatus)) {
     throw new Error(`Invalid order transition: ${order.status} -> ${nextStatus}`)
   }
@@ -114,6 +115,6 @@ export function transitionOrder(order: Order, nextStatus: OrderStatus): Order {
   return {
     ...order,
     status: nextStatus,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now.toISOString(),
   }
 }
