@@ -41,8 +41,7 @@ const sampleItems: OrderItem[] = [
     name: "Original Cheeseburger With Chips",
     unitPrice: 23.99,
     quantity: 1,
-    image: "/placeholder.svg",
-    type: "Non Veg",
+    imageUrl: "/placeholder.svg",
     modifiers: [],
   },
   {
@@ -51,8 +50,7 @@ const sampleItems: OrderItem[] = [
     name: "Fresh Orange Juice With Basil Seed",
     unitPrice: 12.99,
     quantity: 1,
-    image: "/placeholder.svg",
-    type: "Veg",
+    imageUrl: "/placeholder.svg",
     modifiers: [],
   },
 ]
@@ -68,9 +66,7 @@ const initialOrder = createDraftOrder(
   new Date("2026-09-04T08:00:00.000Z"),
 )
 
-const initialOrders: Order[] = [
-  transitionOrder(initialOrder, "confirmed"),
-]
+const initialOrders: Order[] = [transitionOrder(initialOrder, "confirmed", new Date("2026-09-04T08:01:00.000Z"))]
 
 const initialState: RestaurantState = {
   orders: initialOrders,
@@ -115,41 +111,24 @@ function restaurantReducer(state: RestaurantState, action: RestaurantAction): Re
   switch (action.type) {
     case "ADD_ORDER": {
       const orders = [...state.orders, action.payload]
-      return {
-        ...state,
-        orders,
-        dailyMetrics: calculateMetrics(orders),
-      }
+      return { ...state, orders, dailyMetrics: calculateMetrics(orders) }
     }
 
     case "UPDATE_ORDER_STATUS": {
       const orders = state.orders.map((order) =>
         order.id === action.payload.orderId ? transitionOrder(order, action.payload.status) : order,
       )
-      return {
-        ...state,
-        orders,
-        dailyMetrics: calculateMetrics(orders),
-      }
+      return { ...state, orders, dailyMetrics: calculateMetrics(orders) }
     }
 
     case "ADD_CUSTOMER":
-      return {
-        ...state,
-        customers: [...state.customers, action.payload],
-      }
+      return { ...state, customers: [...state.customers, action.payload] }
 
     case "SET_VIEW":
-      return {
-        ...state,
-        currentView: action.payload,
-      }
+      return { ...state, currentView: action.payload }
 
     case "UPDATE_METRICS":
-      return {
-        ...state,
-        dailyMetrics: calculateMetrics(state.orders),
-      }
+      return { ...state, dailyMetrics: calculateMetrics(state.orders) }
 
     default:
       return state
@@ -163,7 +142,6 @@ const RestaurantContext = createContext<{
 
 export function RestaurantProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(restaurantReducer, initialState)
-
   return <RestaurantContext.Provider value={{ state, dispatch }}>{children}</RestaurantContext.Provider>
 }
 
