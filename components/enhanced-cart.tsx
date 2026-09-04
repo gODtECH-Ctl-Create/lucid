@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -15,27 +15,22 @@ export function EnhancedCart() {
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null)
   const [paymentService, setPaymentService] = useState<UnifiedPaymentService | null>(null)
 
-  // Get current order (for demo, using the first order)
   const currentOrder = state.orders[0]
   const cartItems = currentOrder?.items || []
 
-  const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
+  const subtotal = cartItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0)
   const tax = subtotal * 0.05
   const total = subtotal + tax
 
   useEffect(() => {
-    // Initialize payment service based on configuration
-    // This would come from your app settings
     const config = {
-      processor: "paystack", // or 'flutterwave', 'interswitch', etc.
+      processor: "paystack",
       publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
     }
 
     if (config.publicKey) {
       const service = new UnifiedPaymentService("paystack", config)
       setPaymentService(service)
-
-      // Initialize the payment service
       service.initialize().catch(console.error)
     }
   }, [])
@@ -47,7 +42,13 @@ export function EnhancedCart() {
     }
 
     if (!paymentService) {
-      console.error("Payment service not initialized")
+      setPaymentResult({
+        success: false,
+        error: "Payment provider is not configured for this demo.",
+        amount: total,
+        currency: "USD",
+        processor: "unconfigured",
+      })
       return
     }
 
@@ -57,10 +58,7 @@ export function EnhancedCart() {
     try {
       const result = await paymentService.processPayment(total, "USD")
       setPaymentResult(result)
-
-      if (result.success) {
-        handlePaymentSuccess(result)
-      }
+      if (result.success) handlePaymentSuccess(result)
     } catch (error) {
       setPaymentResult({
         success: false,
@@ -75,7 +73,6 @@ export function EnhancedCart() {
   }
 
   const handleCashPayment = () => {
-    // Handle cash payment
     const result: PaymentResult = {
       success: true,
       transactionId: `CASH_${Date.now()}`,
@@ -87,13 +84,12 @@ export function EnhancedCart() {
     handlePaymentSuccess(result)
   }
 
-  const handlePaymentSuccess = (result: PaymentResult) => {
-    if (currentOrder) {
+  const handlePaymentSuccess = (_result: PaymentResult) => {
+    if (currentOrder && currentOrder.status === "confirmed") {
       dispatch({
         type: "UPDATE_ORDER_STATUS",
-        payload: { orderId: currentOrder.id, status: "preparing" },
+        payload: { orderId: currentOrder.id, status: "sent_to_kitchen" },
       })
-      dispatch({ type: "UPDATE_METRICS" })
     }
   }
 
@@ -103,117 +99,77 @@ export function EnhancedCart() {
   }
 
   return (
-    <div className="w-[380px] bg-white border-l flex flex-col h-full">
-      <div className="p-4 border-b flex justify-between items-center">
+    <div className="flex h-full w-[380px] flex-col border-l bg-white">
+      <div className="flex items-center justify-between border-b p-4">
         <div>
-          <h2 className="text-xl font-bold">Table {currentOrder?.tableNumber || "4"}</h2>
-          <p className="text-sm text-gray-500">{currentOrder?.customerName || "Floyd Miles"}</p>
+          <h2 className="text-xl font-bold">{currentOrder?.orderNumber || "Current Order"}</h2>
+          <p className="text-sm text-gray-500">
+            {currentOrder?.tableId ? `Table ${currentOrder.tableId}` : "Take away / delivery"}
+          </p>
         </div>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" aria-label="Edit order">
           <Edit2 className="h-5 w-5" />
         </Button>
       </div>
 
-      <div className="p-4 border-b">
-        <div className="flex gap-2 mb-4">
-          <Button variant="secondary" className="flex-1 rounded-full">
-            Dine in
-          </Button>
-          <Button variant="outline" className="flex-1 rounded-full">
-            Take Away
-          </Button>
-          <Button variant="outline" className="flex-1 rounded-full">
-            Delivery
-          </Button>
+      <div className="border-b p-4">
+        <div className="grid grid-cols-3 gap-2">
+          <Button variant="secondary" className="rounded-full">Dine in</Button>
+          <Button variant="outline" className="rounded-full">Take away</Button>
+          <Button variant="outline" className="rounded-full">Delivery</Button>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
-        {cartItems.map((item, index) => (
-          <div key={index} className="flex items-center gap-3 mb-4">
+        {cartItems.map((item) => (
+          <div key={item.id} className="mb-4 flex items-center gap-3">
             <img
-              src={item.image || "/placeholder.svg?height=64&width=64"}
-              alt={item.title}
-              className="w-16 h-16 rounded-lg object-cover"
+              src={item.imageUrl || "/placeholder.svg?height=64&width=64"}
+              alt={item.name}
+              className="h-16 w-16 rounded-lg object-cover"
             />
             <div className="flex-1">
-              <h4 className="text-sm font-medium">{item.title}</h4>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-green-600 font-bold">${item.price.toFixed(2)}</span>
-                <span className="text-sm text-gray-500">{item.quantity}X</span>
+              <h4 className="text-sm font-medium">{item.name}</h4>
+              <div className="mt-1 flex items-center justify-between">
+                <span className="font-bold text-green-600">${item.unitPrice.toFixed(2)}</span>
+                <span className="text-sm text-gray-500">{item.quantity}x</span>
               </div>
             </div>
           </div>
         ))}
+        {cartItems.length === 0 && <p className="text-sm text-gray-500">No items in the current order.</p>}
       </div>
 
       <div className="border-t p-4">
-        <div className="space-y-2 mb-4">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Sub Total</span>
-            <span>${subtotal.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Tax 5%</span>
-            <span>${tax.toFixed(2)}</span>
-          </div>
+        <div className="mb-4 space-y-2">
+          <div className="flex justify-between text-sm"><span className="text-gray-600">Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-gray-600">Tax 5%</span><span>${tax.toFixed(2)}</span></div>
           <Separator />
-          <div className="flex justify-between font-bold">
-            <span>Total Amount</span>
-            <span>${total.toFixed(2)}</span>
-          </div>
+          <div className="flex justify-between font-bold"><span>Total</span><span>${total.toFixed(2)}</span></div>
         </div>
 
-        {/* Payment Method Selection */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <Button
-            variant={paymentMethod === "cash" ? "default" : "outline"}
-            className="flex flex-col items-center py-2"
-            onClick={() => setPaymentMethod("cash")}
-            disabled={isProcessing}
-          >
-            <Banknote className="h-5 w-5 mb-1" />
-            <span className="text-xs">Cash</span>
+        <div className="mb-4 grid grid-cols-3 gap-2">
+          <Button variant={paymentMethod === "cash" ? "default" : "outline"} className="flex flex-col py-2" onClick={() => setPaymentMethod("cash")} disabled={isProcessing}>
+            <Banknote className="mb-1 h-5 w-5" /><span className="text-xs">Cash</span>
           </Button>
-          <Button
-            variant={paymentMethod === "card" ? "default" : "outline"}
-            className="flex flex-col items-center py-2"
-            onClick={() => setPaymentMethod("card")}
-            disabled={isProcessing}
-          >
-            <CreditCard className="h-5 w-5 mb-1" />
-            <span className="text-xs">Card</span>
+          <Button variant={paymentMethod === "card" ? "default" : "outline"} className="flex flex-col py-2" onClick={() => setPaymentMethod("card")} disabled={isProcessing}>
+            <CreditCard className="mb-1 h-5 w-5" /><span className="text-xs">Card</span>
           </Button>
-          <Button
-            variant={paymentMethod === "qr" ? "default" : "outline"}
-            className="flex flex-col items-center py-2"
-            onClick={() => setPaymentMethod("qr")}
-            disabled={isProcessing}
-          >
-            <QrCode className="h-5 w-5 mb-1" />
-            <span className="text-xs">USSD/QR</span>
+          <Button variant={paymentMethod === "qr" ? "default" : "outline"} className="flex flex-col py-2" onClick={() => setPaymentMethod("qr")} disabled={isProcessing}>
+            <QrCode className="mb-1 h-5 w-5" /><span className="text-xs">USSD / QR</span>
           </Button>
         </div>
 
-        {/* Payment Result */}
         {paymentResult && (
-          <Card
-            className={`mb-4 ${paymentResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}
-          >
+          <Card className={`mb-4 ${paymentResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
             <CardContent className="p-3">
               <div className="flex items-center gap-2">
-                {paymentResult.success ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                )}
+                {paymentResult.success ? <CheckCircle className="h-5 w-5 text-green-600" /> : <AlertCircle className="h-5 w-5 text-red-600" />}
                 <div className="flex-1">
                   <p className={`text-sm font-medium ${paymentResult.success ? "text-green-800" : "text-red-800"}`}>
-                    {paymentResult.success ? "Payment Successful!" : "Payment Failed"}
+                    {paymentResult.success ? "Payment Successful" : "Payment Failed"}
                   </p>
-                  {paymentResult.transactionId && (
-                    <p className="text-xs text-gray-600">ID: {paymentResult.transactionId}</p>
-                  )}
+                  {paymentResult.transactionId && <p className="text-xs text-gray-600">ID: {paymentResult.transactionId}</p>}
                   {paymentResult.error && <p className="text-xs text-red-600">{paymentResult.error}</p>}
                 </div>
               </div>
@@ -221,40 +177,16 @@ export function EnhancedCart() {
           </Card>
         )}
 
-        {/* Card Payment Container */}
-        {paymentMethod === "card" && !paymentResult?.success && (
-          <div id="card-container" className="mb-4 p-3 border rounded-lg bg-gray-50">
-            <p className="text-sm text-gray-600 text-center">Card payment form will appear here</p>
-          </div>
-        )}
-
-        {/* Action Buttons */}
         {!paymentResult?.success ? (
-          <Button
-            className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
-            onClick={handlePayment}
-            disabled={isProcessing || cartItems.length === 0}
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              `Pay $${total.toFixed(2)}`
-            )}
+          <Button className="h-12 w-full bg-green-600 text-white hover:bg-green-700" onClick={handlePayment} disabled={isProcessing || cartItems.length === 0}>
+            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : `Pay $${total.toFixed(2)}`}
           </Button>
         ) : (
           <div className="space-y-2">
-            <Button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
-              onClick={() => console.log("Print receipt")}
-            >
+            <Button className="h-12 w-full bg-blue-600 text-white hover:bg-blue-700" onClick={() => console.log("Print receipt")}>
               Print Receipt
             </Button>
-            <Button variant="outline" className="w-full h-10" onClick={resetPayment}>
-              New Order
-            </Button>
+            <Button variant="outline" className="h-10 w-full" onClick={resetPayment}>New Order</Button>
           </div>
         )}
       </div>
