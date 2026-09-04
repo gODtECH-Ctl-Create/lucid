@@ -1,30 +1,37 @@
-# Restaurant POS
+# Lucid Cash Point
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+Lucid Cash Point is a legacy restaurant Point of Sale (POS) and management system prototype originally built in June 2025.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/aymaxs-projects/v0-restaurant-pos)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/WH4gtrocqdo)
+## What it explores
 
-## Overview
+- Restaurant dashboard and daily activity
+- Order entry and cart workflows
+- Kitchen and order management flows
+- Inventory tracking and low-stock alerts
+- Reporting and operational settings
+- African payment-provider integration experiments
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Technology
 
-## Deployment
+Next.js, React, TypeScript, Tailwind CSS, Radix UI, and pnpm.
 
-Your project is live at:
+## Run locally
 
-**[https://vercel.com/aymaxs-projects/v0-restaurant-pos](https://vercel.com/aymaxs-projects/v0-restaurant-pos)**
+```sh
+pnpm install
+pnpm dev
+```
 
-## Build your app
+Then open the local development URL shown by Next.js.
 
-Continue building your app on:
+## GitHub Pages demo
 
-**[https://v0.dev/chat/projects/WH4gtrocqdo](https://v0.dev/chat/projects/WH4gtrocqdo)**
+This repository includes a GitHub Actions workflow for a static GitHub Pages demo. The normal application configuration is preserved for server-capable deployments.
 
-## How It Works
+The Pages build enables Next.js static export and temporarily excludes the legacy server-side payment verification routes because GitHub Pages serves static files only.
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+The source payment handlers remain in the repository and are not deleted or modified by the Pages workflow.
+
+## Portfolio status
+
+Lucid is presented as a legacy product prototype in the Ayo Richard Abe portfolio. The current goal is to preserve the original work, improve its presentation, and make a safe static demonstration available for portfolio review.
