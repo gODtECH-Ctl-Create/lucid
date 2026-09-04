@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'Lucid Cash Point | Restaurant Point of Sale',
+  description: 'Lucid Cash Point is a restaurant Point of Sale (POS) and management system prototype.',
+  generator: 'Next.js',
 }
 
 export default function RootLayout({
