@@ -30,6 +30,8 @@ const printerFormSchema = z.object({
 
 type PrinterFormValues = z.infer<typeof printerFormSchema>
 
+type PrinterRecord = PrinterFormValues & { id: string }
+
 const defaultValues: PrinterFormValues = {
   name: "",
   type: "thermal",
@@ -43,36 +45,38 @@ const defaultValues: PrinterFormValues = {
   openCashDrawer: false,
 }
 
+const initialPrinters: PrinterRecord[] = [
+  {
+    id: "1",
+    name: "Kitchen Printer",
+    type: "thermal",
+    connection: "network",
+    ipAddress: "192.168.1.100",
+    port: 9100,
+    paperSize: "80mm",
+    isDefault: false,
+    printLogo: false,
+    autoCut: true,
+    openCashDrawer: false,
+  },
+  {
+    id: "2",
+    name: "Receipt Printer",
+    type: "thermal",
+    connection: "network",
+    ipAddress: "192.168.1.101",
+    port: 9100,
+    paperSize: "58mm",
+    isDefault: true,
+    printLogo: true,
+    autoCut: true,
+    openCashDrawer: true,
+  },
+]
+
 export default function PrinterSettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
-  const [printers, setPrinters] = useState([
-    {
-      id: "1",
-      name: "Kitchen Printer",
-      type: "thermal",
-      connection: "network",
-      ipAddress: "192.168.1.100",
-      port: 9100,
-      paperSize: "80mm",
-      isDefault: false,
-      printLogo: false,
-      autoCut: true,
-      openCashDrawer: false,
-    },
-    {
-      id: "2",
-      name: "Receipt Printer",
-      type: "thermal",
-      connection: "network",
-      ipAddress: "192.168.1.101",
-      port: 9100,
-      paperSize: "58mm",
-      isDefault: true,
-      printLogo: true,
-      autoCut: true,
-      openCashDrawer: true,
-    },
-  ])
+  const [printers, setPrinters] = useState<PrinterRecord[]>(initialPrinters)
 
   const form = useForm<PrinterFormValues>({
     resolver: zodResolver(printerFormSchema),
@@ -81,46 +85,40 @@ export default function PrinterSettingsPage() {
 
   function onSubmit(data: PrinterFormValues) {
     setIsLoading(true)
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    window.setTimeout(() => {
+      setPrinters((currentPrinters) => {
+        const normalizedPrinters = data.isDefault
+          ? currentPrinters.map((printer) => ({ ...printer, isDefault: false }))
+          : currentPrinters
+
+        return [
+          ...normalizedPrinters,
+          {
+            id: String(currentPrinters.length + 1),
+            ...data,
+          },
+        ]
+      })
+
       setIsLoading(false)
-      
-      // If setting as default, update other printers
-      if (data.isDefault) {
-        setPrinters(printers.map(printer => ({
-          ...printer,
-          isDefault: false,
-        })))
-      }
-      
-      // Add new printer
-      setPrinters([
-        ...printers,
-        {
-          id: `${printers.length + 1}`,
-          ...data,
-        },
-      ])
-      
       form.reset(defaultValues)
-      
       toast({
         title: "Printer added",
         description: `${data.name} has been added successfully.`,
       })
-    }, 1000)
+    }, 700)
   }
 
-  const testPrinter = (printerId: string) => {
+  function testPrinter(_printerId: string) {
     toast({
       title: "Test print sent",
       description: "A test page has been sent to the printer.",
     })
   }
 
-  const deletePrinter = (printerId: string) => {
-    setPrinters(printers.filter(printer => printer.id !== printerId))
+  function deletePrinter(printerId: string) {
+    setPrinters((currentPrinters) => currentPrinters.filter((printer) => printer.id !== printerId))
     toast({
       title: "Printer removed",
       description: "The printer has been removed successfully.",
@@ -143,12 +141,13 @@ export default function PrinterSettingsPage() {
           <TabsTrigger value="printers">Printers</TabsTrigger>
           <TabsTrigger value="add">Add Printer</TabsTrigger>
         </TabsList>
+
         <TabsContent value="printers" className="space-y-4">
           {printers.length > 0 ? (
             printers.map((printer) => (
               <Card key={printer.id}>
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center space-x-2">
                       <Printer className="h-5 w-5 text-muted-foreground" />
                       <CardTitle>{printer.name}</CardTitle>
@@ -170,36 +169,29 @@ export default function PrinterSettingsPage() {
                     </div>
                   </div>
                   <CardDescription>
-                    {printer.type.charAt(0).toUpperCase() + printer.type.slice(1)} printer • 
-                    {printer.connection === "network" ? ` ${printer.ipAddress}:${printer.port}` : " USB/Local"} • 
-                    {printer.paperSize} paper
+                    {printer.type.charAt(0).toUpperCase() + printer.type.slice(1)} printer •{" "}
+                    {printer.connection === "network"
+                      ? ` ${printer.ipAddress ?? ""}:${printer.port ?? ""}`
+                      : " USB/Local"} • {printer.paperSize} paper
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm font-medium">Print Logo</span>
-                      <span className="text-sm text-muted-foreground">
-                        {printer.printLogo ? "Yes" : "No"}
-                      </span>
+                      <span className="text-sm text-muted-foreground">{printer.printLogo ? "Yes" : "No"}</span>
                     </div>
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm font-medium">Auto Cut</span>
-                      <span className="text-sm text-muted-foreground">
-                        {printer.autoCut ? "Yes" : "No"}
-                      </span>
+                      <span className="text-sm text-muted-foreground">{printer.autoCut ? "Yes" : "No"}</span>
                     </div>
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm font-medium">Cash Drawer</span>
-                      <span className="text-sm text-muted-foreground">
-                        {printer.openCashDrawer ? "Yes" : "No"}
-                      </span>
+                      <span className="text-sm text-muted-foreground">{printer.openCashDrawer ? "Yes" : "No"}</span>
                     </div>
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm font-medium">Paper Size</span>
-                      <span className="text-sm text-muted-foreground">
-                        {printer.paperSize}
-                      </span>
+                      <span className="text-sm text-muted-foreground">{printer.paperSize}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -221,6 +213,7 @@ export default function PrinterSettingsPage() {
             </Card>
           )}
         </TabsContent>
+
         <TabsContent value="add">
           <Card>
             <CardHeader>
@@ -231,7 +224,7 @@ export default function PrinterSettingsPage() {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid gap-4 md:grid-cols-2">
                     <FormField
                       control={form.control}
@@ -246,13 +239,14 @@ export default function PrinterSettingsPage() {
                         </FormItem>
                       )}
                     />
+
                     <FormField
                       control={form.control}
                       name="type"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Printer Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select value={field.value} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select printer type" />
@@ -269,13 +263,14 @@ export default function PrinterSettingsPage() {
                         </FormItem>
                       )}
                     />
+
                     <FormField
                       control={form.control}
                       name="connection"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Connection Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select value={field.value} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select connection type" />
@@ -291,13 +286,14 @@ export default function PrinterSettingsPage() {
                         </FormItem>
                       )}
                     />
+
                     <FormField
                       control={form.control}
                       name="paperSize"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Paper Size</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select value={field.value} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select paper size" />
@@ -313,6 +309,7 @@ export default function PrinterSettingsPage() {
                         </FormItem>
                       )}
                     />
+
                     {connectionType === "network" && (
                       <>
                         <FormField
@@ -321,4 +318,71 @@ export default function PrinterSettingsPage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>IP Address</FormLabel>
-                              \
+                              <FormControl>
+                                <Input placeholder="192.168.1.100" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="port"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Port</FormLabel>
+                              <FormControl>
+                                <Input type="number" min={1} max={65535} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {(
+                      [
+                        ["isDefault", "Set as default"],
+                        ["printLogo", "Print logo"],
+                        ["autoCut", "Auto cut"],
+                        ["openCashDrawer", "Open cash drawer"],
+                      ] as const
+                    ).map(([name, label]) => (
+                      <FormField
+                        key={name}
+                        control={form.control}
+                        name={name}
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-3 rounded-md border p-3">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                            </FormControl>
+                            <FormLabel className="cursor-pointer font-normal">{label}</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+
+                  <Button type="submit" disabled={isLoading}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {isLoading ? "Adding printer..." : "Add Printer"}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
