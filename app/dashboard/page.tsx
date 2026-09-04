@@ -1,402 +1,132 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { NavigationHeader } from "@/components/navigation-header"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  DollarSign,
-  ShoppingCart,
-  Users,
-  TrendingUp,
-  ChefHat,
-  AlertTriangle,
-  Settings,
-  Plus,
-  Eye,
-  MoreHorizontal,
-} from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import Link from "next/link"
+import { ActionButton } from "@/components/action-button"
+import { MetricCard } from "@/components/metric-card"
+import { useRestaurant } from "@/contexts/restaurant-context"
+import { useRouter } from "next/navigation"
 
-// Sample data
-const todayStats = {
-  revenue: 2847.5,
-  orders: 156,
-  customers: 89,
-  avgOrderValue: 18.25,
-}
-
-const recentOrders = [
-  {
-    id: "ORD-001",
-    table: "Table 5",
-    customer: "John Doe",
-    items: 3,
-    total: 45.99,
-    status: "preparing",
-    time: "2 min ago",
-  },
-  {
-    id: "ORD-002",
-    table: "Table 2",
-    customer: "Sarah Wilson",
-    items: 2,
-    total: 28.5,
-    status: "ready",
-    time: "5 min ago",
-  },
-  {
-    id: "ORD-003",
-    table: "Table 8",
-    customer: "Mike Johnson",
-    items: 4,
-    total: 67.25,
-    status: "served",
-    time: "8 min ago",
-  },
-  {
-    id: "ORD-004",
-    table: "Takeaway",
-    customer: "Emma Davis",
-    items: 1,
-    total: 12.99,
-    status: "pending",
-    time: "10 min ago",
-  },
-]
-
-const popularItems = [
-  { name: "Grilled Chicken Breast", orders: 23, revenue: 597.7 },
-  { name: "Caesar Salad", orders: 18, revenue: 233.82 },
-  { name: "Margherita Pizza", orders: 15, revenue: 224.85 },
-  { name: "Beef Burger", orders: 12, revenue: 191.88 },
-]
-
-const lowStockItems = [
-  { name: "Chicken Breast", current: 5, minimum: 10, unit: "kg" },
-  { name: "Tomatoes", current: 8, minimum: 15, unit: "kg" },
-  { name: "Mozzarella Cheese", current: 2, minimum: 5, unit: "kg" },
-]
+const diningModeLabels = {
+  dine_in: "Dine in",
+  takeaway: "Take away",
+  delivery: "Delivery",
+} as const
 
 export default function DashboardPage() {
-  const [selectedPeriod, setSelectedPeriod] = useState("today")
+  const { state, dispatch } = useRestaurant()
+  const router = useRouter()
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      case "preparing":
-        return "bg-blue-100 text-blue-800"
-      case "ready":
-        return "bg-green-100 text-green-800"
-      case "served":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
+  const handleNewOrder = () => {
+    dispatch({ type: "SET_VIEW", payload: "pos" })
+    router.push("/pos")
   }
 
+  const handleOrderManagement = () => {
+    router.push("/orders")
+  }
+
+  const handleCustomerProfiles = () => {
+    router.push("/customers")
+  }
+
+  const handleInventory = () => {
+    router.push("/inventory")
+  }
+
+  const handleReports = () => {
+    router.push("/reports")
+  }
+
+  const { totalSales, numberOfOrders, averageOrderValue } = state.dailyMetrics
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Welcome back! Here's what's happening at your restaurant today.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/pos">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
+    <div className="relative flex size-full min-h-screen flex-col bg-white overflow-x-hidden">
+      <div className="layout-container flex h-full grow flex-col">
+        <NavigationHeader title="Lucid Cash Point" />
+
+        <div className="mx-auto flex w-full max-w-6xl flex-1 justify-center px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex w-full max-w-5xl flex-col gap-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-700">Restaurant operations</p>
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <p className="text-sm text-gray-500">Monitor orders, sales, and daily activity.</p>
+              </div>
+              <Button onClick={handleNewOrder} className="bg-green-600 hover:bg-green-700">
                 New Order
               </Button>
-            </Link>
-            <Link href="/settings">
-              <Button variant="outline">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+            </div>
 
-      <div className="p-6 space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${todayStats.revenue.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+12.5%</span> from yesterday
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{todayStats.orders}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+8.2%</span> from yesterday
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Customers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{todayStats.customers}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+5.1%</span> from yesterday
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${todayStats.avgOrderValue.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+3.8%</span> from yesterday
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Orders */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Recent Orders</CardTitle>
-                  <CardDescription>Latest orders from your restaurant</CardDescription>
+            <div className="px-0">
+              <div className="flex h-12 w-full items-stretch rounded-xl bg-[#f5f5f0]">
+                <div className="flex items-center justify-center pl-4 text-[#8c8b5f]">
+                  <Search size={22} />
                 </div>
-                <Link href="/orders">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View All
-                  </Button>
-                </Link>
+                <Input
+                  placeholder="Search dashboard"
+                  className="h-full border-none bg-transparent px-3 shadow-none focus-visible:ring-0"
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <div className="font-medium">{order.id}</div>
-                        <div className="text-sm text-gray-500">
-                          {order.table} • {order.customer}
-                        </div>
-                      </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <MetricCard title="Total Sales" value={`$${totalSales.toFixed(2)}`} />
+              <MetricCard title="Number of Orders" value={numberOfOrders.toString()} />
+              <MetricCard title="Average Order Value" value={`$${averageOrderValue.toFixed(2)}`} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <ActionButton onClick={handleNewOrder}>New Order</ActionButton>
+              <ActionButton onClick={handleOrderManagement}>Order Management</ActionButton>
+              <ActionButton onClick={handleCustomerProfiles}>Customer Profiles</ActionButton>
+              <ActionButton onClick={handleInventory}>Inventory</ActionButton>
+              <ActionButton onClick={handleReports}>Reports</ActionButton>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-[#181811]">Recent Orders</h2>
+                <p className="text-sm text-gray-500">Latest activity from this session.</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleOrderManagement}>
+                View all
+              </Button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {state.orders.slice(0, 5).map((order) => (
+                <div
+                  key={order.id}
+                  className="flex flex-col gap-4 rounded-xl border border-[#e6e6db] p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                      <span className="font-bold text-green-700">{order.tableId ? `T${order.tableId}` : "TA"}</span>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="font-medium">${order.total.toFixed(2)}</div>
-                        <div className="text-sm text-gray-500">{order.items} items</div>
-                      </div>
-                      <Badge className={getStatusColor(order.status)}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </Badge>
-                      <div className="text-sm text-gray-500">{order.time}</div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Update Status</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>Print Receipt</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <div>
+                      <p className="font-medium text-[#181811]">{order.orderNumber}</p>
+                      <p className="text-sm text-[#8c8b5f]">
+                        {order.items.length} items • {diningModeLabels[order.diningMode]}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions & Alerts */}
-          <div className="space-y-6">
-            {/* Low Stock Alert */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-500" />
-                  Low Stock Alert
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {lowStockItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-sm">{item.name}</div>
-                        <div className="text-xs text-gray-500">
-                          {item.current} {item.unit} remaining
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="text-orange-600 border-orange-200">
-                        Low
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-                <Link href="/inventory">
-                  <Button variant="outline" size="sm" className="w-full mt-4">
-                    Manage Inventory
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Link href="/pos">
-                  <Button className="w-full justify-start">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Order
-                  </Button>
-                </Link>
-                <Link href="/kitchen">
-                  <Button variant="outline" className="w-full justify-start">
-                    <ChefHat className="h-4 w-4 mr-2" />
-                    Kitchen Display
-                  </Button>
-                </Link>
-                <Link href="/reports">
-                  <Button variant="outline" className="w-full justify-start">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    View Reports
-                  </Button>
-                </Link>
-                <Link href="/settings/menu">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Manage Menu
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Popular Items */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Popular Items Today</CardTitle>
-            <CardDescription>Best-selling menu items and their performance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {popularItems.map((item, index) => (
-                <div key={index} className="p-4 border rounded-lg">
-                  <div className="font-medium">{item.name}</div>
-                  <div className="text-sm text-gray-500 mt-1">{item.orders} orders</div>
-                  <div className="text-lg font-bold text-green-600 mt-2">${item.revenue.toFixed(2)}</div>
+                  <div className="text-left sm:text-right">
+                    <p className="font-bold text-[#181811]">${order.pricing.total.toFixed(2)}</p>
+                    <p className="text-sm capitalize text-gray-600">{order.status.replaceAll("_", " ")}</p>
+                  </div>
                 </div>
               ))}
+              {state.orders.length === 0 && (
+                <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
+                  No orders yet. Create your first order from the POS.
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Performance Tabs */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="today" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="today">Today</TabsTrigger>
-                <TabsTrigger value="week">This Week</TabsTrigger>
-                <TabsTrigger value="month">This Month</TabsTrigger>
-              </TabsList>
-              <TabsContent value="today" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">156</div>
-                    <div className="text-sm text-gray-500">Total Orders</div>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">$2,847.50</div>
-                    <div className="text-sm text-gray-500">Revenue</div>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">89</div>
-                    <div className="text-sm text-gray-500">Customers</div>
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="week" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">1,092</div>
-                    <div className="text-sm text-gray-500">Total Orders</div>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">$19,932.50</div>
-                    <div className="text-sm text-gray-500">Revenue</div>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">623</div>
-                    <div className="text-sm text-gray-500">Customers</div>
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="month" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">4,687</div>
-                    <div className="text-sm text-gray-500">Total Orders</div>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">$85,432.75</div>
-                    <div className="text-sm text-gray-500">Revenue</div>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">2,891</div>
-                    <div className="text-sm text-gray-500">Customers</div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
